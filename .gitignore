@@ -12,6 +12,18 @@ dist
 dist-ssr
 *.local
 
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Markdown docs (keep root README.md)
+*.md
+!README.md
+
+# Supabase CLI artifacts
+supabase/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
