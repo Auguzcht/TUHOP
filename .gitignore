@@ -17,9 +17,9 @@ dist-ssr
 .env.*
 !.env.example
 
-# Markdown docs (keep root README.md)
+# Markdown docs
 *.md
-!README.md
+# !README.md - keep root README.md when we're done finalizing the app
 
 # Supabase CLI artifacts
 supabase/
@@ -34,3 +34,7 @@ supabase/
 *.njsproj
 *.sln
 *.sw?
+
+# Plan files
+Wireframe/
+GeoJSON/

@@ -1,0 +1,258 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ============================================================
+   TUHOP Font Imports
+   Instrument Serif — display/headings (thin, editorial feel)
+   Inter — body/UI (clean, professional, tight spacing)
+   JetBrains Mono — data/code (post IDs, confidence %)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Font families */
+  --font-heading: 'Instrument Serif', serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Border radius — slightly softer than default shadcn */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 1.875rem;
+
+  /* shadcn color token mapping */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  /* ============================================================
+     TUHOP Light Theme — Authenticated Dashboard
+     Palette: cream bg + white cards + navy text + teal accents
+     ============================================================ */
+  --background: oklch(0.97 0.005 90);            /* Warm cream white */
+  --foreground: oklch(0.20 0.02 240);             /* Dark navy text */
+  --card: oklch(1 0 0);                           /* Pure white cards */
+  --card-foreground: oklch(0.20 0.02 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.20 0.02 240);
+
+  --primary: oklch(0.25 0.03 240);                /* Navy — sidebar bg, dark buttons */
+  --primary-foreground: oklch(0.98 0 0);          /* White text on navy */
+
+  --secondary: oklch(0.95 0.005 90);              /* Slightly darker cream */
+  --secondary-foreground: oklch(0.25 0.03 240);
+
+  --muted: oklch(0.94 0.005 90);
+  --muted-foreground: oklch(0.50 0.01 240);
+
+  --accent: oklch(0.65 0.14 185);                 /* Teal — CTA, links, active states */
+  --accent-foreground: oklch(0.98 0 0);
+
+  --destructive: oklch(0.62 0.22 25);             /* Red — severity-high, delete actions */
+
+  --border: oklch(0.90 0.005 240);
+  --input: oklch(0.92 0.005 240);
+  --ring: oklch(0.65 0.14 185);                   /* Teal focus ring */
+
+  /* Chart colors — traffic light severity + status */
+  --chart-1: oklch(0.72 0.19 145);                /* Green  — Low severity */
+  --chart-2: oklch(0.78 0.16 85);                 /* Amber  — Moderate severity */
+  --chart-3: oklch(0.62 0.22 25);                 /* Red    — High severity */
+  --chart-4: oklch(0.65 0.14 185);                /* Teal   — Verified */
+  --chart-5: oklch(0.50 0.01 240);                /* Muted  — Unverified */
+
+  --radius: 0.625rem;
+
+  /* Sidebar — dark navy */
+  --sidebar: oklch(0.25 0.03 240);
+  --sidebar-foreground: oklch(0.85 0.005 240);
+  --sidebar-primary: oklch(0.65 0.14 185);        /* Teal active item */
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.30 0.03 240);         /* Slightly lighter navy hover */
+  --sidebar-accent-foreground: oklch(0.90 0 0);
+  --sidebar-border: oklch(0.35 0.025 240);
+  --sidebar-ring: oklch(0.65 0.14 185);
+
+  /* ============================================================
+     TUHOP Semantic Severity Tokens
+     ============================================================ */
+  --severity-low: oklch(0.72 0.19 145);
+  --severity-moderate: oklch(0.78 0.16 85);
+  --severity-high: oklch(0.62 0.22 25);
+}
+
+.dark {
+  /* ============================================================
+     TUHOP Dark Theme — Login/Register Hero Pages
+     Palette: deep navy/slate bg + teal gradients + white text
+     ============================================================ */
+  --background: oklch(0.18 0.025 240);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.22 0.025 240);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.22 0.025 240);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.65 0.14 185);                /* Teal becomes primary in dark */
+  --primary-foreground: oklch(0.15 0.02 240);
+  --secondary: oklch(0.28 0.025 240);
+  --secondary-foreground: oklch(0.90 0 0);
+  --muted: oklch(0.28 0.025 240);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.65 0.14 185);
+  --accent-foreground: oklch(0.15 0.02 240);
+  --destructive: oklch(0.65 0.20 25);
+  --border: oklch(0.32 0.02 240);
+  --input: oklch(0.30 0.02 240);
+  --ring: oklch(0.65 0.14 185);
+  --chart-1: oklch(0.72 0.19 145);
+  --chart-2: oklch(0.78 0.16 85);
+  --chart-3: oklch(0.62 0.22 25);
+  --chart-4: oklch(0.65 0.14 185);
+  --chart-5: oklch(0.55 0.01 240);
+  --sidebar: oklch(0.15 0.02 240);
+  --sidebar-foreground: oklch(0.90 0 0);
+  --sidebar-primary: oklch(0.65 0.14 185);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.22 0.02 240);
+  --sidebar-accent-foreground: oklch(0.90 0 0);
+  --sidebar-border: oklch(0.28 0.02 240);
+  --sidebar-ring: oklch(0.65 0.14 185);
+}
+
+/* ============================================================
+   Base Layer — Typography & Resets
+   ============================================================ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  html {
+    @apply scroll-smooth;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Heading hierarchy — Instrument Serif for display, Inter for UI */
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.25rem;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    font-weight: 400;
+  }
+  h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.75rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+  h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.25rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  h4 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    line-height: 1.4;
+    letter-spacing: -0.005em;
+    font-weight: 600;
+  }
+}
+
+/* ============================================================
+   Utility Classes — Severity Badges & Status Tags
+   ============================================================ */
+@layer utilities {
+  .badge-severity-low {
+    @apply bg-[oklch(0.72_0.19_145/0.15)] text-[oklch(0.55_0.19_145)] border border-[oklch(0.72_0.19_145/0.30)] text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+  .badge-severity-moderate {
+    @apply bg-[oklch(0.78_0.16_85/0.15)] text-[oklch(0.60_0.16_85)] border border-[oklch(0.78_0.16_85/0.30)] text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+  .badge-severity-high {
+    @apply bg-[oklch(0.62_0.22_25/0.15)] text-[oklch(0.52_0.22_25)] border border-[oklch(0.62_0.22_25/0.30)] text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+
+  /* Status badges */
+  .badge-status-ongoing {
+    @apply bg-red-50 text-red-700 border border-red-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-status-clearing {
+    @apply bg-amber-50 text-amber-700 border border-amber-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-status-resolved {
+    @apply bg-green-50 text-green-700 border border-green-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+
+  /* Validation status */
+  .badge-verified {
+    @apply bg-teal-50 text-teal-700 border border-teal-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-overridden {
+    @apply bg-orange-50 text-orange-700 border border-orange-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-unverified {
+    @apply bg-slate-50 text-slate-500 border border-slate-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+
+  /* Role badges */
+  .badge-role-admin {
+    @apply bg-red-50 text-red-700 border border-red-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-role-validator {
+    @apply bg-purple-50 text-purple-700 border border-purple-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-role-barangay {
+    @apply bg-blue-50 text-blue-700 border border-blue-200 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+
+  /* Data/monospace text for post IDs, confidence percentages */
+  .font-data {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8125rem;
+    letter-spacing: 0;
+  }
+}
