@@ -1,45 +1,50 @@
-import type { Session } from "@supabase/supabase-js";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { Database } from "@/types/supabase";
 
 type UserProfile = Database["public"]["Tables"]["users_profile"]["Row"];
 
+/**
+ * Auth store — minimal profile cache.
+ *
+ * This is NOT a session store. Session lives in the AuthContext.
+ * This store just caches the profile for components (sidebar, topbar)
+ * that need profile data without context access.
+ *
+ * No persist middleware — profile is ephemeral and fetched on every
+ * page load via the INITIAL_SESSION event.
+ */
 interface AuthState {
-	session: Session | null;
-	profile: UserProfile | null;
-	isLoading: boolean;
-	setSession: (session: Session | null) => void;
-	setProfile: (profile: UserProfile | null) => void;
-	setLoading: (isLoading: boolean) => void;
-	clear: () => void;
-	isAdmin: () => boolean;
-	isValidator: () => boolean;
-	isBarangay: () => boolean;
+  profile: UserProfile | null;
+  isLoading: boolean;
+  isInitialized: boolean;
+
+  setProfile: (profile: UserProfile | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setInitialized: () => void;
+  clear: () => void;
+
+  isAdmin: () => boolean;
+  isValidator: () => boolean;
+  isBarangay: () => boolean;
 }
 
-export const useAuthStore = create<AuthState>()(
-	persist(
-		(set, get) => ({
-			session: null,
-			profile: null,
-			isLoading: true,
-			setSession: (session) => set({ session }),
-			setProfile: (profile) => set({ profile }),
-			setLoading: (isLoading) => set({ isLoading }),
-			clear: () => set({ session: null, profile: null, isLoading: false }),
-			isAdmin: () => get().profile?.role === "admin",
-			isValidator: () => get().profile?.role === "hitl_validator",
-			isBarangay: () => get().profile?.role === "barangay_official",
-		}),
-		{
-			name: "tuhop-auth-store",
-			storage: createJSONStorage(() => sessionStorage),
-			partialize: (state) => ({
-				session: state.session,
-				profile: state.profile,
-			}),
-		}
-	)
-);
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  profile: null,
+  isLoading: true,
+  isInitialized: false,
+
+  setProfile: (profile) => set({ profile }),
+  setLoading: (isLoading) => set({ isLoading }),
+  setInitialized: () => set({ isInitialized: true, isLoading: false }),
+  clear: () =>
+    set({
+      profile: null,
+      isLoading: false,
+      isInitialized: true,
+    }),
+
+  isAdmin: () => get().profile?.role === "admin",
+  isValidator: () => get().profile?.role === "hitl_validator",
+  isBarangay: () => get().profile?.role === "barangay_official",
+}));

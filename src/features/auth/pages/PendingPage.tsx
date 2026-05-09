@@ -3,13 +3,11 @@ import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthContext } from "@/contexts/auth-context";
 
 export function PendingPage() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
-  const { profile, session } = useAuthStore();
+  const { session, profile, signOut } = useAuthContext();
 
   useEffect(() => {
     if (!session) {

@@ -7,20 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/use-auth";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthContext } from "@/contexts/auth-context";
 import { loginSchema } from "@/features/auth/schemas/login.schema";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { signIn, error: authError } = useAuth();
-  const { session, profile } = useAuthStore();
+  const { session, profile, signIn } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Redirect if already authenticated
   useEffect(() => {
     if (!session) return;
     if (profile?.status === "pending_review") {
@@ -41,14 +40,14 @@ export function LoginPage() {
     }
 
     setIsSubmitting(true);
-    const response = await signIn(email, password);
-    if (response.error) {
-      setFormError(response.error.message);
+    const { error } = await signIn(email, password);
+    if (error) {
+      setFormError(error);
     }
     setIsSubmitting(false);
   };
 
-  const errorMessage = formError ?? authError;
+  const errorMessage = formError;
 
   return (
     <div className="w-full max-w-md space-y-6">

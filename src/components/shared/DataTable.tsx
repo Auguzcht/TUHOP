@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   flexRender,
   getCoreRowModel,
@@ -36,6 +38,7 @@ type DataTableProps<TData> = {
   searchKey?: string;
   filters?: FilterConfig[];
   className?: string;
+  isLoading?: boolean;
 };
 
 export function DataTable<TData>({
@@ -44,6 +47,7 @@ export function DataTable<TData>({
   searchKey,
   filters,
   className,
+  isLoading,
 }: DataTableProps<TData>) {
   const table = useReactTable({
     data,
@@ -61,15 +65,17 @@ export function DataTable<TData>({
     table.getColumn(key)?.setFilterValue(value === "all" ? "" : value);
   };
 
+  const columnCount = useMemo(() => columns.length, [columns.length]);
+
   return (
     <div className={cn("space-y-4", className)}>
       {(searchKey || filters?.length) && (
         <div className="flex flex-wrap items-center gap-3">
           {searchKey && (
             <Input
-              placeholder="Search"
+              placeholder="Search..."
               onChange={(event) => handleSearch(event.target.value)}
-              className="max-w-xs"
+              className="h-10 max-w-xs rounded-lg"
             />
           )}
           {filters?.map((filter) => (
@@ -78,7 +84,7 @@ export function DataTable<TData>({
               onValueChange={(value) => handleFilterChange(filter.key, value)}
               defaultValue="all"
             >
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="h-10 w-44 rounded-lg">
                 <SelectValue placeholder={filter.label} />
               </SelectTrigger>
               <SelectContent>
@@ -93,47 +99,70 @@ export function DataTable<TData>({
           ))}
         </div>
       )}
-      <div className="rounded-xl border bg-card">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+      <div className="overflow-hidden rounded-xl border bg-card">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columnCount}
+                    className="h-32 text-center"
+                  >
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <div className="size-4 animate-spin rounded-full border-2 border-muted border-t-accent" />
+                      Loading...
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row, i) => (
+                  <motion.tr
+                    key={row.id}
+                    className="border-b border-border/40 transition-colors hover:bg-muted/30"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: i * 0.02 }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-3 text-sm">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </motion.tr>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columnCount}
+                    className="h-32 text-center text-sm text-muted-foreground"
+                  >
+                    No results found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

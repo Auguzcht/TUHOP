@@ -1,6 +1,7 @@
 import {
   CheckCircle2,
   FileText,
+  Home,
   LayoutDashboard,
   LogOut,
   MapPin,
@@ -26,8 +27,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { useAuthContext } from "@/contexts/auth-context";
 import { useAuthStore } from "@/stores/auth-store";
 
 type NavItem = {
@@ -38,6 +39,11 @@ type NavItem = {
 };
 
 const primaryItems: NavItem[] = [
+  {
+    label: "Home",
+    to: "/home",
+    icon: Home,
+  },
   {
     label: "Dashboard",
     to: "/dashboard",
@@ -84,16 +90,21 @@ const managementItems: NavItem[] = [
   },
 ];
 
+// Stagger animation delay helper (CSS-based, compatible with shadcn sidebar)
+const staggerDelay = (i: number) => ({
+  animationDelay: `${i * 50}ms`,
+});
+
 export function AppSidebar() {
-  const { profile, clear } = useAuthStore();
+  const { profile } = useAuthStore();
+  const { signOut } = useAuthContext();
   const location = useLocation();
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    clear();
+  const handleSignOut = () => {
+    signOut();
   };
 
-  const renderItem = (item: NavItem) => {
+  const renderItem = (item: NavItem, index: number) => {
     if (item.roles && profile?.role && !item.roles.includes(profile.role)) {
       return null;
     }
@@ -103,10 +114,14 @@ export function AppSidebar() {
       (item.to !== "/" && location.pathname.startsWith(item.to));
 
     return (
-      <SidebarMenuItem key={item.to}>
+      <SidebarMenuItem
+        key={item.to}
+        className="animate-in-up"
+        style={staggerDelay(index)}
+      >
         <SidebarMenuButton asChild isActive={isActive}>
-          <NavLink to={item.to} className={cn("flex w-full items-center gap-2")}>
-            <item.icon />
+          <NavLink to={item.to} className="flex w-full items-center gap-2">
+            <item.icon className="size-4 shrink-0" />
             <span>{item.label}</span>
           </NavLink>
         </SidebarMenuButton>
@@ -116,39 +131,55 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="inset">
-      <SidebarHeader className="gap-3">
+      <SidebarHeader className="gap-3 p-4">
         <div className="flex items-center gap-3">
-          <Avatar className="size-10">
-            <AvatarFallback>
+          <Avatar className="size-10 ring-2 ring-sidebar-primary/20">
+            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground text-xs font-semibold">
               {profile?.full_name?.slice(0, 2)?.toUpperCase() ?? "TU"}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="truncate text-sm font-semibold text-sidebar-foreground">
               {profile?.full_name ?? "TUHOP"}
             </span>
-            {profile?.role ? <RoleBadge role={profile.role} /> : null}
+            {profile?.role ? (
+              <RoleBadge role={profile.role} className="w-fit" />
+            ) : null}
           </div>
         </div>
       </SidebarHeader>
       <SidebarSeparator />
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Favorites</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
+            Main
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{primaryItems.map(renderItem)}</SidebarMenu>
+            <SidebarMenu>
+              {primaryItems.map((item, i) => renderItem(item, i))}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>System Management</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
+            System
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{managementItems.map(renderItem)}</SidebarMenu>
+            <SidebarMenu>
+              {managementItems.map((item, i) =>
+                renderItem(item, primaryItems.length + i)
+              )}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <Button variant="ghost" className="justify-start gap-2" onClick={handleSignOut}>
-          <LogOut className="size-4" />
+      <SidebarFooter className="p-4">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          onClick={handleSignOut}
+        >
+          <LogOut className="size-4 shrink-0" />
           <span>Log out</span>
         </Button>
       </SidebarFooter>

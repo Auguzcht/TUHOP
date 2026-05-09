@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { PrivateLayout } from "@/components/layout/PrivateLayout";
 import { PublicLayout } from "@/components/layout/PublicLayout";
+import { RouteGuard } from "@/components/shared/RouteGuard";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { PendingPage } from "@/features/auth/pages/PendingPage";
@@ -21,42 +22,65 @@ import { BarangayDirectoryTab } from "@/features/admin/pages/BarangayDirectoryTa
 import { HomePage } from "@/features/social/pages/HomePage";
 
 function IndexRedirect() {
-	const { profile } = useAuthStore();
+  const { profile } = useAuthStore();
 
-	if (profile?.role === "barangay_official") {
-		return <Navigate to="/home" replace />;
-	}
+  if (profile?.role === "barangay_official") {
+    return <Navigate to="/home" replace />;
+  }
 
-	return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 export const router = createBrowserRouter([
-	{
-		element: <PublicLayout />,
-		children: [
-			{ path: "/login", element: <LoginPage /> },
-			{ path: "/register", element: <RegisterPage /> },
-		],
-	},
-	{
-		element: <PrivateLayout />,
-		children: [
-			{ index: true, element: <IndexRedirect /> },
-			{ path: "/home", element: <HomePage /> },
-			{ path: "/dashboard", element: <DashboardPage /> },
-			{ path: "/validate", element: <ValidatePage /> },
-			{ path: "/validate/:reportId", element: <ValidateDetailPage /> },
-			{ path: "/map", element: <MapPage /> },
-			{ path: "/audit", element: <ModelAuditPage /> },
-			{ path: "/audit/archive", element: <AuditArchivePage /> },
-			{ path: "/reports", element: <IncidentArchivePage /> },
-			{ path: "/settings", element: <SettingsPage /> },
-			{ path: "/settings/users", element: <PendingUsersTab /> },
-			{ path: "/settings/approved", element: <ApprovedUsersTab /> },
-			{ path: "/settings/rejected", element: <RejectedUsersTab /> },
-			{ path: "/settings/directory", element: <BarangayDirectoryTab /> },
-		],
-	},
-	{ path: "/account-pending", element: <PendingPage /> },
-	{ path: "*", element: <Navigate to="/login" replace /> },
+  // ─── Public Routes ───────────────────────────────────────
+  {
+    element: <PublicLayout />,
+    children: [
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
+    ],
+  },
+
+  // ─── Private Routes (shared auth layout) ─────────────────
+  {
+    element: <PrivateLayout />,
+    children: [
+      { index: true, element: <IndexRedirect /> },
+
+      // All active users
+      { path: "/home", element: <HomePage /> },
+      { path: "/map", element: <MapPage /> },
+
+      // Validators + Admins only
+      {
+        element: <RouteGuard allowedRoles={["hitl_validator", "admin"]} />,
+        children: [
+          { path: "/dashboard", element: <DashboardPage /> },
+          { path: "/validate", element: <ValidatePage /> },
+          { path: "/validate/:reportId", element: <ValidateDetailPage /> },
+          { path: "/audit", element: <ModelAuditPage /> },
+        ],
+      },
+
+      // Admins only
+      {
+        element: <RouteGuard allowedRoles={["admin"]} />,
+        children: [
+          { path: "/audit/archive", element: <AuditArchivePage /> },
+          { path: "/reports", element: <IncidentArchivePage /> },
+          { path: "/settings", element: <SettingsPage /> },
+          { path: "/settings/users", element: <PendingUsersTab /> },
+          { path: "/settings/approved", element: <ApprovedUsersTab /> },
+          { path: "/settings/rejected", element: <RejectedUsersTab /> },
+          { path: "/settings/directory", element: <BarangayDirectoryTab /> },
+        ],
+      },
+    ],
+  },
+
+  // ─── Pending Account Page ────────────────────────────────
+  { path: "/account-pending", element: <PendingPage /> },
+
+  // ─── Catch-all ───────────────────────────────────────────
+  { path: "*", element: <Navigate to="/login" replace /> },
 ]);

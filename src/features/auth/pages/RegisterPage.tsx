@@ -6,14 +6,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/use-auth";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthContext } from "@/contexts/auth-context";
 import { registerSchema } from "@/features/auth/schemas/register.schema";
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const { signUp, error: authError } = useAuth();
-  const { session, profile } = useAuthStore();
+  const { session, profile, signUp } = useAuthContext();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,9 +43,9 @@ export function RegisterPage() {
     }
 
     setIsSubmitting(true);
-    const response = await signUp(email, password, { full_name: fullName });
-    if (response.error) {
-      setFormError(response.error.message);
+    const { error } = await signUp(email, password, { full_name: fullName });
+    if (error) {
+      setFormError(error);
       setIsSubmitting(false);
       return;
     }
@@ -56,7 +54,7 @@ export function RegisterPage() {
     navigate("/account-pending", { replace: true });
   };
 
-  const errorMessage = formError ?? authError;
+  const errorMessage = formError;
 
   return (
     <div className="w-full max-w-md space-y-6">

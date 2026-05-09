@@ -1,0 +1,7 @@
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "env": {
+    "VITE_DROP_CONSOLE": "true"
+  }
+}

@@ -1,21 +1,14 @@
 import { Navigate, Outlet } from "react-router-dom";
 
+import { useAuthContext } from "@/contexts/auth-context";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Topbar } from "@/components/layout/Topbar";
-import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function PrivateLayout() {
-  const { session, profile, isLoading } = useAuthStore();
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-svh items-center justify-center">
-        <LoadingSpinner label="Checking session" />
-      </div>
-    );
-  }
+  const { session } = useAuthContext();
+  const profile = useAuthStore((s) => s.profile);
 
   if (!session) {
     return <Navigate to="/login" replace />;
@@ -26,13 +19,23 @@ export function PrivateLayout() {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      defaultOpen
+      style={
+        {
+          "--sidebar-width": "16rem",
+          "--sidebar-width-mobile": "18rem",
+        } as React.CSSProperties
+      }
+    >
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="flex min-h-svh flex-col">
         <Topbar />
-        <div className="flex-1 p-6">
-          <Outlet />
-        </div>
+        <main className="flex-1 overflow-auto">
+          <div className="content-padding mx-auto w-full max-w-7xl">
+            <Outlet />
+          </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );
