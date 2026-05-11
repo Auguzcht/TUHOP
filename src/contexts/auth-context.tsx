@@ -31,7 +31,7 @@ type AuthContextValue = {
   session: Session | null;
   profile: ReturnType<typeof useAuthStore.getState>["profile"];
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<AuthResult>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<AuthResult>;
   signUp: (
     email: string,
     password: string,
@@ -182,8 +182,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ─── Actions ───────────────────────────────────────────────
 
   const signIn = useCallback(
-    async (email: string, password: string): Promise<AuthResult> => {
+    async (email: string, password: string, rememberMe?: boolean): Promise<AuthResult> => {
       try {
+        // Set preference BEFORE sign-in so custom storage adapter routes session correctly
+        if (rememberMe) {
+          localStorage.setItem("auth-remember-me", "true");
+          sessionStorage.setItem("auth-remember-me", "true");
+        } else {
+          localStorage.removeItem("auth-remember-me");
+          sessionStorage.setItem("auth-remember-me", "false");
+        }
+
         const result = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -230,6 +239,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result.error) {
         console.warn("[auth] signOut API error:", result.error.message);
       }
+      // Clear remember me preference
+      localStorage.removeItem("auth-remember-me");
+      sessionStorage.removeItem("auth-remember-me");
+
       // Store is cleared by SIGNED_OUT event handler, but clear
       // immediately too so the UI updates before the event fires.
       useAuthStore.getState().clear();
@@ -240,6 +253,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Sign out failed";
       console.error("[auth] signOut threw:", err);
+      localStorage.removeItem("auth-remember-me");
+      sessionStorage.removeItem("auth-remember-me");
       useAuthStore.getState().clear();
       return { error: msg, data: null };
     }

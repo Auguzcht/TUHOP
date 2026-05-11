@@ -104,6 +104,12 @@
   50% { box-shadow: 0 0 0 8px oklch(0.65 0.14 185 / 0); }
 }
 
+/* Button shimmer — diagonal sweep across button on hover */
+@keyframes shimmer {
+  from { transform: translateX(-100%) skewX(-15deg); }
+  to { transform: translateX(200%) skewX(-15deg); }
+}
+
 :root {
   /* ============================================================
      TUHOP Light Theme — Authenticated Dashboard
@@ -213,6 +219,16 @@
   html {
     @apply scroll-smooth;
     font-family: 'Inter', sans-serif;
+    /* Match light theme bg — prevents white flash on overscroll */
+    background: oklch(0.97 0.005 90);
+    /* Kill root overscroll — layouts handle their own overflow */
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  /* When .dark class is anywhere in the DOM, match its bg on html */
+  html:has(.dark) {
+    background: oklch(0.18 0.025 240);
   }
 
   /* Mobile-first heading scale — scales up on md+ */
@@ -360,5 +376,23 @@
   }
   .card-hover:hover {
     @apply shadow-md -translate-y-0.5;
+  }
+
+  /* Button shimmer overlay */
+  .btn-shimmer {
+    @apply relative overflow-hidden;
+  }
+  .btn-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+    animation: shimmer 2.5s ease-in-out infinite;
   }
 }

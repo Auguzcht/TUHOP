@@ -29,9 +29,9 @@ export function PrivateLayout() {
       }
     >
       <AppSidebar />
-      <SidebarInset className="flex min-h-svh flex-col">
+      <SidebarInset className="flex h-svh flex-col overflow-hidden">
         <Topbar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-y-auto">
           <div className="content-padding mx-auto w-full max-w-7xl">
             <Outlet />
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Lock, Mail } from "lucide-react";
+import { Loader2, Lock, Mail } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthContext } from "@/contexts/auth-context";
 import { loginSchema } from "@/features/auth/schemas/login.schema";
+import { motionSpring, motionDurations, motionEasing } from "@/components/shared/motion";
+
+const fieldVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, delay: 0.1 + i * 0.06, ease: motionEasing.out },
+  }),
+};
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -19,7 +30,6 @@ export function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (!session) return;
     if (profile?.status === "pending_review") {
@@ -40,7 +50,7 @@ export function LoginPage() {
     }
 
     setIsSubmitting(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email, password, rememberMe);
     if (error) {
       setFormError(error);
     }
@@ -51,22 +61,39 @@ export function LoginPage() {
 
   return (
     <div className="w-full max-w-md space-y-6">
-      <div className="space-y-2">
+      <motion.div
+        className="space-y-2"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: motionEasing.out }}
+      >
         <h1 className="text-3xl font-heading">Welcome to TUHOP!</h1>
         <p className="text-sm text-muted-foreground">
-          Turning Data into Direction, Hope into Action.
+          Sign in to access the flood reporting dashboard.
         </p>
-      </div>
+      </motion.div>
 
       {errorMessage ? (
-        <Alert variant="destructive">
-          <AlertTitle>Sign in failed</AlertTitle>
-          <AlertDescription>{errorMessage}</AlertDescription>
-        </Alert>
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          transition={{ duration: motionDurations.quick, ease: motionEasing.out }}
+        >
+          <Alert variant="destructive">
+            <AlertTitle>Sign in failed</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        </motion.div>
       ) : null}
 
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-2">
+        <motion.div
+          className="space-y-2"
+          custom={0}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <Label htmlFor="email">Email</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -81,9 +108,15 @@ export function LoginPage() {
               required
             />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="space-y-2">
+        <motion.div
+          className="space-y-2"
+          custom={1}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <Label htmlFor="password">Password</Label>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -98,34 +131,61 @@ export function LoginPage() {
               required
             />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <label className="flex items-center gap-2">
+        <motion.div
+          className="flex flex-nowrap items-center justify-between gap-4 text-xs text-muted-foreground"
+          custom={2}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <label className="flex cursor-pointer items-center gap-2 whitespace-nowrap">
             <Checkbox
               checked={rememberMe}
               onCheckedChange={(value) => setRememberMe(Boolean(value))}
             />
-            Remember me
+            <span>Remember me</span>
           </label>
-          <span className="text-accent">Forgot password?</span>
-        </div>
+          <span className="text-accent hover:text-accent/80 transition-colors cursor-pointer whitespace-nowrap">
+            Forgot password?
+          </span>
+        </motion.div>
 
-        <Button
-          type="submit"
-          className="w-full rounded-full bg-gradient-to-r from-accent to-[oklch(0.82_0.10_185)] text-accent-foreground"
-          disabled={isSubmitting}
+        <motion.div
+          custom={3}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
         >
-          {isSubmitting ? "Signing in..." : "Sign In"}
-        </Button>
+          <Button
+            type="submit"
+            className="w-full rounded-full bg-gradient-to-r from-accent to-[oklch(0.82_0.10_185)] text-accent-foreground"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                Signing in
+                <Loader2 className="size-4 animate-spin" />
+              </>
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+        </motion.div>
       </form>
 
-      <div className="text-center text-xs text-muted-foreground">
+      <motion.div
+        className="text-center text-xs text-muted-foreground"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.5, ease: motionEasing.out }}
+      >
         Don&apos;t have an account?{" "}
-        <Link to="/register" className="text-accent">
+        <Link to="/register" className="text-accent hover:text-accent/80 transition-colors">
           Register
         </Link>
-      </div>
+      </motion.div>
     </div>
   );
 }

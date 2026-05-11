@@ -1,75 +1,80 @@
 import { Outlet } from "react-router-dom";
-import { Droplets } from "lucide-react";
 import { motion } from "framer-motion";
+
+import { BubbleBackground } from "@/components/animate-ui/components/backgrounds/bubble";
 
 export function PublicLayout() {
   return (
-    <div className="dark min-h-svh bg-background text-foreground">
-      <div className="grid min-h-svh lg:grid-cols-[1.1fr_1fr]">
-        {/* ─── Hero Panel (hidden on mobile) ─────────────────────── */}
-        <div className="relative hidden items-center justify-center overflow-hidden border-r border-border/40 bg-gradient-to-b from-[oklch(0.14_0.025_240)] to-[oklch(0.18_0.025_240)] p-10 lg:flex">
-          {/* Decorative gradient orbs */}
-          <div className="pointer-events-none absolute -right-32 -top-32 size-96 rounded-full bg-accent/5 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-32 -left-32 size-80 rounded-full bg-accent/8 blur-3xl" />
-
-          <motion.div
-            className="relative max-w-sm space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+    <div className="dark flex h-svh w-full overflow-hidden bg-background text-foreground">
+      <div className="grid h-svh w-full lg:grid-cols-[1.1fr_1fr]">
+        {/* ─── Hero Panel ─────────────────────────────────────── */}
+        <div className="relative hidden overflow-hidden lg:block">
+          <BubbleBackground
+            interactive
+            transition={{ stiffness: 120, damping: 25 }}
+            className="flex h-full w-full flex-col"
           >
-            {/* Logo mark */}
-            <motion.div
-              className="flex size-16 items-center justify-center rounded-2xl bg-accent/10 ring-1 ring-accent/20"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            >
-              <Droplets className="size-8 text-accent" />
-            </motion.div>
+            {/* Gradient overlay for readability */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/20" />
 
-            <div className="space-y-3">
-              <div className="text-xs font-medium uppercase tracking-[0.3em] text-accent">
-                TUHOP
-              </div>
-              <h1 className="text-3xl font-heading leading-tight text-foreground">
-                Flood Reporting Platform
-              </h1>
-              <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-                Turning Data into Direction, Hope into Action.
-              </p>
-            </div>
+            <div className="relative z-10 flex h-full flex-col items-center justify-center gap-8 px-12">
+              {/* ── Logo (fades in first, pops on hover) ──── */}
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                whileHover={{ scale: 1.05 }}
+                className="cursor-default"
+              >
+                <img
+                  src="/TUHOP-Logo.png"
+                  alt="TUHOP"
+                  draggable={false}
+                  className="size-64 select-none object-contain drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] pointer-events-none"
+                />
+              </motion.div>
 
-            {/* Feature highlights */}
-            <div className="space-y-3 pt-4">
-              {[
-                "AI-powered severity classification",
-                "Real-time validation by CDRRMO experts",
-                "District-level flood monitoring",
-              ].map((text, i) => (
-                <motion.div
-                  key={text}
-                  className="flex items-center gap-3 text-xs text-muted-foreground"
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
-                >
-                  <span className="flex size-1.5 shrink-0 rounded-full bg-accent/60" />
-                  {text}
-                </motion.div>
-              ))}
+              {/* ── Banner (fades in after logo, reacts on hover) ── */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+                whileHover={{ scale: 1.03 }}
+                className="cursor-default"
+              >
+                <img
+                  src="/TUHOP-Banner.png"
+                  alt="TUHOP"
+                  draggable={false}
+                  className="w-80 select-none object-contain drop-shadow-[0_0_25px_rgba(0,0,0,0.5)] pointer-events-none"
+                />
+              </motion.div>
             </div>
-          </motion.div>
+          </BubbleBackground>
         </div>
 
-        {/* ─── Form Panel ────────────────────────────────────────── */}
-        <motion.div
-          className="flex items-center justify-center p-6 md:p-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <Outlet />
-        </motion.div>
+        {/* ─── Form Panel ────────────────────────────────────── */}
+        <div className="flex items-center justify-center overflow-y-auto bg-background p-6 md:p-10">
+          <div className="flex w-full max-w-sm flex-col gap-6">
+            {/* Mobile logo */}
+            <div className="flex items-center gap-3 lg:hidden">
+              <img
+                src="/TUHOP-Logo.png"
+                alt="TUHOP"
+                draggable={false}
+                className="size-10 rounded-lg object-cover ring-2 ring-border select-none pointer-events-none"
+              />
+              <img
+                src="/TUHOP-Banner.png"
+                alt="TUHOP"
+                draggable={false}
+                className="h-5 select-none object-contain pointer-events-none"
+              />
+            </div>
+
+            <Outlet />
+          </div>
+        </div>
       </div>
     </div>
   );
