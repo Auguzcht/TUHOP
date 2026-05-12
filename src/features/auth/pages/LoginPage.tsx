@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthContext } from "@/contexts/auth-context";
 import { loginSchema } from "@/features/auth/schemas/login.schema";
-import { motionSpring, motionDurations, motionEasing } from "@/components/shared/motion";
+import { motionDurations, motionEasing } from "@/components/shared/motion";
 
 const fieldVariants = {
   hidden: { opacity: 0, y: 12 },

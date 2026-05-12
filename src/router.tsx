@@ -21,6 +21,7 @@ import { RejectedUsersTab } from "@/features/admin/pages/RejectedUsersTab";
 import { BarangayDirectoryTab } from "@/features/admin/pages/BarangayDirectoryTab";
 import { HomePage } from "@/features/social/pages/HomePage";
 
+// eslint-disable-next-line react-refresh/only-export-components
 function IndexRedirect() {
   const { profile } = useAuthStore();
 

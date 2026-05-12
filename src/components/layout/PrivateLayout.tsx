@@ -1,4 +1,5 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 
 import { useAuthContext } from "@/contexts/auth-context";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -9,6 +10,12 @@ import { useAuthStore } from "@/stores/auth-store";
 export function PrivateLayout() {
   const { session } = useAuthContext();
   const profile = useAuthStore((s) => s.profile);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
+  const location = useLocation();
+
+  if (!isInitialized) {
+    return null;
+  }
 
   if (!session) {
     return <Navigate to="/login" replace />;
@@ -33,7 +40,14 @@ export function PrivateLayout() {
         <Topbar />
         <main className="flex-1 overflow-y-auto">
           <div className="content-padding mx-auto w-full max-w-7xl">
-            <Outlet />
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <Outlet />
+            </motion.div>
           </div>
         </main>
       </SidebarInset>

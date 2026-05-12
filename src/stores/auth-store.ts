@@ -18,10 +18,13 @@ interface AuthState {
   profile: UserProfile | null;
   isLoading: boolean;
   isInitialized: boolean;
+  /** True during login/logout transitions — shows TuhopLoader */
+  transitioning: boolean;
 
   setProfile: (profile: UserProfile | null) => void;
   setLoading: (isLoading: boolean) => void;
   setInitialized: () => void;
+  setTransitioning: (v: boolean) => void;
   clear: () => void;
 
   isAdmin: () => boolean;
@@ -33,15 +36,18 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   profile: null,
   isLoading: true,
   isInitialized: false,
+  transitioning: false,
 
   setProfile: (profile) => set({ profile }),
   setLoading: (isLoading) => set({ isLoading }),
   setInitialized: () => set({ isInitialized: true, isLoading: false }),
+  setTransitioning: (transitioning) => set({ transitioning }),
   clear: () =>
     set({
       profile: null,
       isLoading: false,
       isInitialized: true,
+      transitioning: false,
     }),
 
   isAdmin: () => get().profile?.role === "admin",

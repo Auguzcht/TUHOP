@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 
 import { useAuthStore } from "@/stores/auth-store";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 type UserRole = "barangay_official" | "hitl_validator" | "admin";
 
@@ -20,9 +21,18 @@ export function RouteGuard({
   allowedRoles,
   fallback = "/dashboard",
 }: RouteGuardProps) {
-  const { profile } = useAuthStore();
+  const { profile, isInitialized } = useAuthStore();
 
-  if (!profile?.role || !allowedRoles.includes(profile.role)) {
+  if (!isInitialized || !profile?.role) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <LoadingSpinner label="Loading access..." />
+      </div>
+    );
+  }
+
+  if (!allowedRoles.includes(profile.role)) {
+    console.log("[guard] redirecting to", fallback, "- role:", profile.role);
     return <Navigate to={fallback} replace />;
   }
 

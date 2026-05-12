@@ -8,7 +8,9 @@ import { MotionScale } from "./MotionScale"
 import { MotionStagger, MotionStaggerItem } from "./MotionStagger"
 import { motionPresets } from "./presets"
 
+// eslint-disable-next-line react-refresh/only-export-components
 export * from "./presets"
+// eslint-disable-next-line react-refresh/only-export-components
 export * from "./transitions"
 export { MotionFade, MotionScale, MotionStagger, MotionStaggerItem }
 

@@ -6,11 +6,12 @@ import {
   useRef,
   useState,
 } from "react";
-import type { Session } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
 import type { ReactNode } from "react";
 
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth-store";
+import type { Database } from "@/types/supabase";
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ type AuthContextValue = {
     metadata?: Record<string, string>
   ) => Promise<AuthResult>;
   signOut: () => Promise<AuthResult>;
+  resetAuthState: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -55,12 +57,10 @@ async function fetchProfile(userId: string) {
     if (error) {
       if (error.code === "PGRST116") {
         // Row not found (trigger hasn't created it yet)
-        useAuthStore.getState().setProfile(null);
       } else {
         console.error("[auth] profile fetch error:", error);
-        useAuthStore.getState().setProfile(null);
       }
-      return;
+      return false;
     }
 
     useAuthStore.getState().setProfile(data);
@@ -69,10 +69,48 @@ async function fetchProfile(userId: string) {
       role: data?.role ?? null,
       status: data?.status ?? null,
     });
+    return true;
   } catch (err) {
     console.error("[auth] profile fetch exception:", err);
-    useAuthStore.getState().setProfile(null);
+    return false;
   }
+}
+
+async function fetchProfileWithTimeout(userId: string, timeoutMs = 1500) {
+  const timeoutPromise = new Promise<boolean>((resolve) => {
+    const id = window.setTimeout(() => resolve(false), timeoutMs);
+    void id;
+  });
+
+  return Promise.race([fetchProfile(userId), timeoutPromise]);
+}
+
+type UserProfileRow = Database["public"]["Tables"]["users_profile"]["Row"];
+
+function buildFallbackProfile(user: User): UserProfileRow {
+  const now = new Date().toISOString();
+  const role =
+    (user.user_metadata?.role as UserProfileRow["role"]) ||
+    "barangay_official";
+
+  return {
+    id: user.id,
+    barangay_id: null,
+    full_name:
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email ||
+      "Unknown",
+    email: user.email ?? "",
+    phone_number: null,
+    avatar_url: null,
+    role,
+    status: "active",
+    approved_by: null,
+    approved_at: null,
+    created_at: now,
+    updated_at: now,
+  };
 }
 
 // ─── Provider ───────────────────────────────────────────────
@@ -82,89 +120,112 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const subRef = useRef<{ unsubscribe: () => void } | null>(null);
 
-  // Single subscription — mirrors NextGen pattern exactly
+  // Single subscription — handles EVERYTHING (NextGen pattern)
+  // Uses subRef + bootstrappedRef to survive StrictMode double-mount.
+  // Keep isMounted for React state updates (setSession), but let zustand
+  // store updates (setProfile, setInitialized) through even after cleanup
+  // — otherwise StrictMode races leave isInitialized=false forever.
   useEffect(() => {
-    // Prevent double subscription in StrictMode
     if (subRef.current) return;
 
     let isMounted = true;
-
-    const initializeSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (!isMounted) return;
-        if (error) {
-          console.error("[auth] getSession error:", error);
-        }
-
-        const currentSession = data.session ?? null;
-        setSession(currentSession);
-        logAuth("getSession", {
-          hasSession: Boolean(currentSession),
-          userId: currentSession?.user?.id ?? null,
-        });
-
-        if (currentSession?.user?.id) {
-          // Load profile in the background so init does not block the UI.
-          void fetchProfile(currentSession.user.id);
-        } else {
-          useAuthStore.getState().setProfile(null);
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        console.error("[auth] getSession exception:", err);
-        useAuthStore.getState().setProfile(null);
-      } finally {
-        if (!isMounted) return;
-        setLoading(false);
+    const bootstrapped = { current: false };
+    const initFallback = window.setTimeout(() => {
+      if (!useAuthStore.getState().isInitialized) {
+        console.warn("[auth] init fallback fired");
         useAuthStore.getState().setInitialized();
+        setLoading(false);
       }
+    }, 2500);
+
+    const bootstrap = async () => {
+      if (bootstrapped.current) return;
+      bootstrapped.current = true;
+
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.warn("[auth] getSession error:", error.message);
+      }
+
+      if (isMounted) {
+        setSession(data.session ?? null);
+      }
+
+      if (data.session?.user?.id) {
+        const loaded = await fetchProfileWithTimeout(data.session.user.id);
+        if (!loaded) {
+          useAuthStore.getState().setProfile(
+            buildFallbackProfile(data.session.user)
+          );
+        }
+      } else {
+        useAuthStore.getState().setProfile(null);
+      }
+
+      setLoading(false);
+      useAuthStore.getState().setInitialized();
     };
 
-    initializeSession();
+    void bootstrap();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      setSession(currentSession);
-      logAuth("auth event", {
-        event,
-        userId: currentSession?.user?.id ?? null,
-      });
+      logAuth("event", { event, userId: currentSession?.user?.id ?? null });
+
+      if (isMounted) {
+        setSession(currentSession);
+      }
 
       switch (event) {
         case "INITIAL_SESSION":
-          // Page load, tab refocus, token refresh
+          if (bootstrapped.current) return;
+          bootstrapped.current = true;
+
           if (currentSession?.user?.id) {
-            void fetchProfile(currentSession.user.id);
+            const loaded = await fetchProfileWithTimeout(currentSession.user.id);
+            if (!loaded) {
+              useAuthStore.getState().setProfile(
+                buildFallbackProfile(currentSession.user)
+              );
+            }
           } else {
             useAuthStore.getState().setProfile(null);
           }
+
+          // These go through zustand — safe even if React unmounted
           setLoading(false);
           useAuthStore.getState().setInitialized();
           break;
 
         case "SIGNED_IN":
-          if (currentSession?.user?.id) {
+          useAuthStore.getState().setTransitioning(false);
+          if (currentSession?.user?.id && !useAuthStore.getState().profile) {
             void fetchProfile(currentSession.user.id);
+          }
+          if (!useAuthStore.getState().isInitialized) {
+            setLoading(false);
+            useAuthStore.getState().setInitialized();
           }
           break;
 
         case "SIGNED_OUT":
           useAuthStore.getState().clear();
+          if (!useAuthStore.getState().isInitialized) {
+            setLoading(false);
+            useAuthStore.getState().setInitialized();
+          }
           break;
 
         case "TOKEN_REFRESHED":
-          // Supabase auto-refreshed — session is already updated
           if (currentSession?.user?.id && !useAuthStore.getState().profile) {
-            void fetchProfile(currentSession.user.id);
+            await fetchProfile(currentSession.user.id);
           }
           break;
 
         case "USER_UPDATED":
-          // User data changed (email, metadata)
           if (currentSession?.user?.id) {
-            void fetchProfile(currentSession.user.id);
+            await fetchProfile(currentSession.user.id);
           }
           break;
       }
@@ -173,6 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     subRef.current = subscription;
 
     return () => {
+      window.clearTimeout(initFallback);
       isMounted = false;
       subscription.unsubscribe();
       subRef.current = null;
@@ -193,15 +255,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.setItem("auth-remember-me", "false");
         }
 
+        useAuthStore.getState().setTransitioning(true);
         const result = await supabase.auth.signInWithPassword({
           email,
           password,
         });
+        if (result.error) {
+          useAuthStore.getState().setTransitioning(false);
+        }
         return {
           error: result.error?.message ?? null,
           data: result.data?.session ?? null,
         };
       } catch (err) {
+        useAuthStore.getState().setTransitioning(false);
         const msg = err instanceof Error ? err.message : "Sign in failed";
         return { error: msg, data: null };
       }
@@ -234,18 +301,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async (): Promise<AuthResult> => {
+    useAuthStore.getState().setTransitioning(true);
     try {
       const result = await supabase.auth.signOut();
       if (result.error) {
         console.warn("[auth] signOut API error:", result.error.message);
       }
-      // Clear remember me preference
       localStorage.removeItem("auth-remember-me");
       sessionStorage.removeItem("auth-remember-me");
-
-      // Store is cleared by SIGNED_OUT event handler, but clear
-      // immediately too so the UI updates before the event fires.
       useAuthStore.getState().clear();
+      setSession(null);
+      setLoading(false);
       return {
         error: result.error?.message ?? null,
         data: null,
@@ -256,8 +322,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("auth-remember-me");
       sessionStorage.removeItem("auth-remember-me");
       useAuthStore.getState().clear();
+      setSession(null);
+      setLoading(false);
+      useAuthStore.getState().setTransitioning(false);
       return { error: msg, data: null };
     }
+  }, []);
+
+  const resetAuthState = useCallback(() => {
+    useAuthStore.getState().clear();
+    useAuthStore.getState().setInitialized();
+    setSession(null);
+    setLoading(false);
   }, []);
 
   const profile = useAuthStore((s) => s.profile);
@@ -271,6 +347,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
+        resetAuthState,
       }}
     >
       {children}
@@ -280,6 +357,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // ─── Hook ───────────────────────────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuthContext(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) {

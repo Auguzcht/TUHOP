@@ -1,49 +1,71 @@
+import { useEffect, useRef, useState } from "react";
 import type { PropsWithChildren } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { AuthProvider } from "@/contexts/auth-context";
+import { TuhopLoader } from "@/components/shared/TuhopLoader";
 import { useAuthStore } from "@/stores/auth-store";
 
-/**
- * Stable QueryClient instance — created once at module scope.
- * Does not use useMemo to avoid potential hook resolution conflicts
- * with QueryClientProvider's own hooks in the render tree.
- */
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
+    queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
   },
 });
 
-/**
- * App root providers.
- *
- * AuthProvider renders ONCE at the top level (never remounts).
- * Loading screen shows while isInitialized=false.
- * Once initialized, children render.
- */
+const HOLD_MS = 2000;
+
 export function AppProviders({ children }: PropsWithChildren) {
   const isInitialized = useAuthStore((s) => s.isInitialized);
+  const transitioning = useAuthStore((s) => s.transitioning);
+  const [held, setHeld] = useState(false);
+  const prevLoading = useRef(true);
+
+  const loading = !isInitialized || transitioning;
+
+  // Detect when loading transitions false→true or true→false
+  useEffect(() => {
+    if (loading) {
+      // Loading started — cancel any pending hold
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHeld(false);
+    } else if (prevLoading.current) {
+      // Loading just finished — hold full loader for HOLD_MS
+      setHeld(true);
+      const t = setTimeout(() => setHeld(false), HOLD_MS);
+      return () => clearTimeout(t);
+    }
+    prevLoading.current = loading;
+  }, [loading]);
+
+  const showLoader = loading || held;
+  const variant = transitioning || held ? "full" : "minimal";
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {!isInitialized ? (
-          <div className="flex min-h-svh items-center justify-center bg-background">
-            <div className="flex flex-col items-center gap-3">
-              <div className="size-6 animate-spin rounded-full border-2 border-muted border-t-accent" />
-              <span className="text-xs text-muted-foreground">
-                Loading TUHOP...
-              </span>
-            </div>
-          </div>
-        ) : (
-          children
-        )}
+        <AnimatePresence mode="wait">
+          {showLoader ? (
+            <motion.div
+              key={variant}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <TuhopLoader variant={variant} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="app"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              {children}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </AuthProvider>
     </QueryClientProvider>
   );

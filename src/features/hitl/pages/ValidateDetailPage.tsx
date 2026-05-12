@@ -30,6 +30,7 @@ export function ValidateDetailPage() {
 
   useEffect(() => {
     if (report?.model_severity) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSeverity(report.model_severity);
     }
   }, [report?.model_severity]);

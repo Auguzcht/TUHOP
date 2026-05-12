@@ -1,6 +1,5 @@
 import { Bell, Search } from "lucide-react";
 
-import { RoleBadge } from "@/components/shared/RoleBadge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,9 +53,15 @@ export function Topbar() {
                 <div className="text-xs font-semibold leading-tight">
                   {profile?.full_name ?? "TUHOP"}
                 </div>
-                {profile?.role ? (
-                  <RoleBadge role={profile.role} className="text-[10px]" />
-                ) : null}
+                <div className="text-[10px] text-muted-foreground">
+                  {profile?.role === "admin"
+                    ? "Admin"
+                    : profile?.role === "hitl_validator"
+                      ? "Validator"
+                      : profile?.role === "barangay_official"
+                        ? "Barangay Official"
+                        : ""}
+                </div>
               </div>
             </button>
           </DropdownMenuTrigger>
