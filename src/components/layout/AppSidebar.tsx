@@ -256,7 +256,7 @@ export function AppSidebar() {
                     <div key={group.label}>
                       <SidebarMenuItem>
                         <SidebarMenuButton
-                          isActive={group.items.some(
+                          isActive={group.items!.some(
                             (item) => location.pathname === item.to
                           )}
                           onClick={() => toggleGroup(idx)}
@@ -291,7 +291,7 @@ export function AppSidebar() {
 
                             {/* Animated highlight — px-based, aligns to actual button positions */}
                             {(() => {
-                              const activeIdx = group.items.findIndex((i) => isActive(i.to));
+                              const activeIdx = group.items!.findIndex((i) => isActive(i.to));
                               if (activeIdx === -1) return null;
                               // h-7 = 28px, gap-1.5 = 6px. Each slot = 34px.
                               const slotH = 34;
@@ -306,7 +306,7 @@ export function AppSidebar() {
                             })()}
 
                             <SidebarMenu>
-                              {group.items.map((item) => (
+                              {group.items!.map((item) => (
                                 <SidebarMenuItem key={item.to}>
                                   <SidebarMenuButton
                                     asChild

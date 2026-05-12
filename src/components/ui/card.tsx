@@ -22,7 +22,8 @@ function Card({
         className
       )}
       {...(interactive ? motionPresets.hoverLift : {})}
-      {...props}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {...(props as any)}
     />
   )
 }

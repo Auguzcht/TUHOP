@@ -168,7 +168,7 @@ export function TuhopLoader({ variant = "minimal" }: TuhopLoaderProps) {
           >
             {/* Staggered TUHOP text */}
             <div className="mb-6 flex overflow-hidden">
-              {"TUHOP".split("").map((char, i) => (
+              {"TUHOP".split("").map((_char, i) => (
                 <motion.span
                   key={i}
                   className="inline-block bg-gradient-to-r from-teal-300 to-teal-500 bg-clip-text font-sans-rounded text-3xl tracking-wider text-transparent md:text-4xl"

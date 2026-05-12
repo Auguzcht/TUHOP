@@ -194,6 +194,8 @@ function CalendarDayButton({
 
   return (
     <Button
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - ref is handled by motion.button internally
       ref={ref}
       variant="ghost"
       size="icon"
