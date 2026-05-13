@@ -25,7 +25,9 @@ export function useTopBarangays() {
       // Aggregate in JS since Supabase doesn't support GROUP BY with joins in all cases
       const counts: Record<string, { count: number; district: string }> = {};
       for (const row of data ?? []) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const name = (row as any).barangay?.name ?? "Unknown";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const district = (row as any).barangay?.district?.name ?? "Unknown";
         if (!counts[name]) counts[name] = { count: 0, district };
         counts[name].count++;

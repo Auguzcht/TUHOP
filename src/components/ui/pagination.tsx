@@ -164,5 +164,7 @@ export {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-  getPageNumbers,
 }
+
+// eslint-disable-next-line react-refresh/only-export-components
+export { getPageNumbers }

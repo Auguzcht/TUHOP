@@ -32,7 +32,9 @@ export function useRecentOverrides() {
       return (data ?? []).map((row) => ({
         id: row.id,
         postId: row.post_id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         barangayName: (row as any).barangay?.name ?? null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         districtName: (row as any).barangay?.districts?.name ?? null,
         modelSeverity: row.model_severity,
         humanSeverity: row.human_severity,
