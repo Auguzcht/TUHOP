@@ -64,15 +64,22 @@ export function RegisterPage() {
     }
 
     setIsSubmitting(true);
+    const startTime = Date.now();
     const { error } = await signUp(email, password, { full_name: fullName });
     if (error) {
       setFormError(error);
-      setIsSubmitting(false);
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 600 - elapsed);
+      setTimeout(() => setIsSubmitting(false), remaining);
       return;
     }
 
-    setIsSubmitting(false);
-    navigate("/account-pending", { replace: true });
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, 600 - elapsed);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      navigate("/account-pending", { replace: true });
+    }, remaining);
   };
 
   const errorMessage = formError;

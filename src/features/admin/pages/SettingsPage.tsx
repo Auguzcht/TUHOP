@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { Users, UserCheck, UserX, Building2 } from "lucide-react";
 
 import { StatCard } from "@/components/shared/StatCard";
@@ -19,33 +18,24 @@ const TABS = [
 ] as const;
 
 export function SettingsPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [activeTab, setActiveTab] = useState("users");
   const { data: stats } = useUserStats();
 
-  // Determine active tab from URL
-  const activeTab = TABS.find((t) => location.pathname.endsWith(t.value))?.value ?? "users";
-
   const handleTabChange = (value: string) => {
-    navigate(`/settings/${value}`, { replace: true });
+    setActiveTab(value);
   };
-
-  // Redirect /settings to /settings/users
-  useEffect(() => {
-    if (location.pathname === "/settings") {
-      navigate("/settings/users", { replace: true });
-    }
-  }, [location.pathname, navigate]);
 
   return (
     <PageTransition>
       <div className="space-y-6">
         {/* Page header */}
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading">User Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Approve, manage, and review user accounts across the platform.
-          </p>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-heading">User Management</h1>
+            <p className="text-sm text-muted-foreground">
+              Approve, manage, and review user accounts across the platform.
+            </p>
+          </div>
         </div>
 
         {/* Stats row */}

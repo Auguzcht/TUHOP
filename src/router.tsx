@@ -15,10 +15,6 @@ import { MapPage } from "@/features/map/pages/MapPage";
 import { ModelAuditPage } from "@/features/audit/pages/ModelAuditPage";
 import { AuditArchivePage } from "@/features/audit/pages/AuditArchivePage";
 import { SettingsPage } from "@/features/admin/pages/SettingsPage";
-import { PendingUsersTab } from "@/features/admin/pages/PendingUsersTab";
-import { ApprovedUsersTab } from "@/features/admin/pages/ApprovedUsersTab";
-import { RejectedUsersTab } from "@/features/admin/pages/RejectedUsersTab";
-import { BarangayDirectoryTab } from "@/features/admin/pages/BarangayDirectoryTab";
 import { HomePage } from "@/features/social/pages/HomePage";
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -70,10 +66,6 @@ export const router = createBrowserRouter([
           { path: "/audit/archive", element: <AuditArchivePage /> },
           { path: "/reports", element: <IncidentArchivePage /> },
           { path: "/settings", element: <SettingsPage /> },
-          { path: "/settings/users", element: <PendingUsersTab /> },
-          { path: "/settings/approved", element: <ApprovedUsersTab /> },
-          { path: "/settings/rejected", element: <RejectedUsersTab /> },
-          { path: "/settings/directory", element: <BarangayDirectoryTab /> },
         ],
       },
     ],

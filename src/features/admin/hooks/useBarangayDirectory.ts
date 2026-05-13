@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 export function useBarangayDirectory() {
   return useQuery({
     queryKey: ["admin", "barangay-directory"],
+    staleTime: 60_000,
+    gcTime: 300_000,
     queryFn: async () => {
       const [barangayRes, usersRes, reportsRes] = await Promise.all([
         supabase

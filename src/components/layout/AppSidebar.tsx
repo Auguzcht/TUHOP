@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Building2,
   CheckCircle2,
   ChevronDown,
   FileText,
@@ -9,8 +8,6 @@ import {
   LogOut,
   MapPin,
   ShieldCheck,
-  UserCheck,
-  UserX,
   Users,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -18,6 +15,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
+  useSidebar,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
@@ -84,12 +82,7 @@ const systemGroups: SystemGroup[] = [
     label: "User Management",
     icon: Users,
     roles: ["admin"] as const,
-    items: [
-      { label: "Pending", to: "/settings/users", icon: Users },
-      { label: "Approved", to: "/settings/approved", icon: UserCheck },
-      { label: "Rejected", to: "/settings/rejected", icon: UserX },
-      { label: "Directory", to: "/settings/directory", icon: Building2 },
-    ],
+    to: "/settings",
   },
   {
     label: "Model Audit",
@@ -150,6 +143,7 @@ export function AppSidebar() {
   const { signOut } = useAuthContext();
   const location = useLocation();
   const { filteredMain, filteredGroups } = useFiltered();
+  const sidebarState = useSidebar();
 
   // Track open groups based on active sub-route
   const initialGroups = filteredGroups.map((g) => {
@@ -160,36 +154,37 @@ export function AppSidebar() {
   });
   const [openGroups, setOpenGroups] = useState<boolean[]>(initialGroups);
 
-  const toggleGroup = (idx: number) =>
+  const toggleGroup = (idx: number) => {
+    if (sidebarState.state === "collapsed") {
+      // Expand sidebar first, then open sub-items after transition
+      sidebarState.setOpen(true);
+      setTimeout(() => {
+        setOpenGroups((prev) => {
+          const next = [...prev];
+          next[idx] = !next[idx];
+          return next;
+        });
+      }, 300);
+      return;
+    }
     setOpenGroups((prev) => {
       const next = [...prev];
       next[idx] = !next[idx];
       return next;
     });
+  };
 
   const isActive = (to: string) => location.pathname === to;
 
   return (
     <Sidebar collapsible="icon" variant="inset">
       {/* ─── Header ───────────────────────────────────────── */}
-      <SidebarHeader className="gap-1 p-3">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent">
-            <img
-              src="/TUHOP-Logo.png"
-              alt="TUHOP"
-              draggable={false}
-              className="size-7 object-contain"
-            />
-          </div>
-          <div className="flex min-w-0 flex-col">
-            <img
-              src="/TUHOP-Banner.png"
-              alt="TUHOP"
-              draggable={false}
-              className="h-5 w-auto select-none pointer-events-none transition-opacity duration-300 delay-200 ease-[cubic-bezier(0.7,-0.15,0.25,1.15)] group-data-[collapsible=icon]:opacity-0 group-data-[state=expanded]:delay-[50ms]"
-            />
-          </div>
+      <SidebarHeader className="flex-row items-center gap-3 px-1.6 py-4.5">
+        <div className="flex shrink-0 items-center justify-center rounded-lg bg-sidebar-accent" style={{ width: 40, height: 40 }}>
+          <img src="/TUHOP-Logo.png" alt="TUHOP" draggable={false} className="size-7 object-contain" />
+        </div>
+        <div className="transition-opacity duration-400 ease-out group-data-[collapsible=icon]:opacity-0">
+          <img src="/TUHOP-Banner.png" alt="TUHOP" draggable={false} className="h-5 w-auto select-none pointer-events-none" />
         </div>
       </SidebarHeader>
 
@@ -197,7 +192,7 @@ export function AppSidebar() {
 
       {/* ─── Main Pages ───────────────────────────────────── */}
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="group-data-[collapsible=icon]:p-2 py-3">
           <SidebarGroupLabel className="px-3 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
             Main
           </SidebarGroupLabel>
@@ -222,7 +217,7 @@ export function AppSidebar() {
 
         {/* ─── System Sections ─────────────────────────────── */}
         {filteredGroups.length > 0 && (
-          <SidebarGroup>
+          <SidebarGroup className="group-data-[collapsible=icon]:p-2 py-3">
             <SidebarGroupLabel className="px-3 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
               System
             </SidebarGroupLabel>
@@ -268,23 +263,23 @@ export function AppSidebar() {
                           </span>
                           <ChevronDown
                             className={cn(
-                              "size-3 transition-transform duration-300 ease-[cubic-bezier(0.7,-0.15,0.25,1.15)]",
+                              "size-3 transition-transform duration-300 ease-[cubic-bezier(0.7,-0.15,0.25,1.15)] group-data-[collapsible=icon]:hidden",
                               isOpen && "rotate-180"
                             )}
                           />
                         </SidebarMenuButton>
                       </SidebarMenuItem>
 
-                      {/* Sub-items with timeline bar */}
+                      {/* Sub-items with timeline bar — hidden when sidebar collapsed */}
                       <div
                         className={cn(
-                          "grid transition-all duration-300 ease-[cubic-bezier(0.7,-0.15,0.25,1.15)]",
+                          "grid transition-all duration-300 ease-[cubic-bezier(0.7,-0.15,0.25,1.15)] group-data-[collapsible=icon]:hidden",
                           isOpen
                             ? "grid-rows-[1fr] opacity-100"
                             : "grid-rows-[0fr] opacity-0"
                         )}
                       >
-                        <div className="overflow-hidden pt-1.5">
+                        <div className="overflow-hidden">
                           <div className="relative ml-2.5 pl-5">
                             {/* Static timeline track */}
                             <div className="pointer-events-none absolute left-0 top-0 h-full w-px bg-sidebar-border/30" />

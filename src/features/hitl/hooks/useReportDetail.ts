@@ -6,6 +6,8 @@ export function useReportDetail(reportId: string | undefined) {
   return useQuery({
     queryKey: ["hitl", "report", reportId],
     enabled: Boolean(reportId),
+    staleTime: 60_000,
+    gcTime: 120_000,
     queryFn: async () => {
       if (!reportId) {
         return { report: null, images: [] };
@@ -15,7 +17,7 @@ export function useReportDetail(reportId: string | undefined) {
         supabase
           .from("flood_reports")
           .select(
-            "*, barangay:barangays(name, districts(name)), author:users_profile!flood_reports_author_id_fkey(full_name, avatar_url), validator:users_profile!flood_reports_validator_id_fkey(full_name)"
+            "*, barangay:barangays(name, district:districts(name)), author:users_profile!flood_reports_author_id_fkey(full_name, avatar_url, role, barangay:barangays!users_profile_barangay_id_fkey(name, district:districts(name))), validator:users_profile!flood_reports_validator_id_fkey(full_name)"
           )
           .eq("id", reportId)
           .maybeSingle(),

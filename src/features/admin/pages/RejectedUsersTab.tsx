@@ -1,105 +1,54 @@
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { formatDistanceToNow } from "date-fns";
+import { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { formatDistanceToNow } from "date-fns";
 
-import { DataTable } from "@/components/shared/DataTable";
-import { RoleBadge } from "@/components/shared/RoleBadge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useManageUser } from "@/features/admin/hooks/useManageUser";
+import { RoleBadge } from "@/components/shared/RoleBadge";
+import { DataTable } from "@/components/shared/DataTable";
 import { useUsersByStatus } from "@/features/admin/hooks/useUsersByStatus";
 
+type UserRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  role: "barangay_official" | "hitl_validator" | "admin";
+  status: string;
+  created_at: string;
+  barangay?: { name: string; district?: { name: string } } | null;
+};
+
 export function RejectedUsersTab() {
-  const [search, setSearch] = useState("");
-  const { data, isLoading } = useUsersByStatus("rejected", search);
-  const { mutate, isPending } = useManageUser();
-  type UserRow = NonNullable<typeof data>[number];
+  const { data, isLoading } = useUsersByStatus("rejected");
 
   const columns = useMemo<ColumnDef<UserRow>[]>(
     () => [
       {
-        accessorKey: "full_name",
-        header: "Name",
-        cell: ({ row }) => row.original.full_name ?? "Unknown",
-      },
-      {
-        accessorKey: "email",
-        header: "Email",
-        cell: ({ row }) => row.original.email ?? "—",
-      },
-      {
-        accessorKey: "role",
-        header: "Role",
-        cell: ({ row }) => {
-          const role = row.original.role;
-          return role === "barangay_official" || role === "hitl_validator" || role === "admin" ? (
-            <RoleBadge role={role} />
-          ) : (
-            <Badge variant="outline">Unassigned</Badge>
-          );
-        },
-      },
-      {
-        accessorKey: "barangay",
-        header: "Barangay",
-        cell: ({ row }) => row.original.barangay?.name ?? "—",
-      },
-      {
-        accessorKey: "district",
-        header: "District",
-        cell: ({ row }) => row.original.barangay?.districts?.name ?? "—",
-      },
-      {
-        accessorKey: "created_at",
-        header: "Submitted",
-        cell: ({ row }) =>
-          row.original.created_at
-            ? formatDistanceToNow(new Date(row.original.created_at), { addSuffix: true })
-            : "—",
-      },
-      {
-        id: "actions",
-        header: "Actions",
+        id: "avatar", header: "",
         cell: ({ row }) => (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              className="h-8 rounded-lg"
-              disabled={isPending}
-              onClick={() =>
-                mutate({ userId: row.original.id, action: "activate" })
-              }
-            >
-              Reactivate
-            </Button>
+          <Avatar className="size-8"><AvatarFallback className="text-[10px] font-semibold">{row.original.full_name?.slice(0, 2).toUpperCase() ?? "??"}</AvatarFallback></Avatar>
+        ),
+      },
+      { accessorKey: "full_name", header: "Name",
+        cell: ({ row }) => (
+          <div>
+            <div className="font-medium">{row.original.full_name}</div>
+            <Badge className="badge-severity-high">Rejected</Badge>
           </div>
         ),
       },
+      { accessorKey: "email", header: "Email", cell: ({ row }) => <span className="text-xs">{row.original.email}</span> },
+      { accessorKey: "role", header: "Role", cell: ({ row }) => <RoleBadge role={row.original.role} /> },
+      { accessorKey: "barangay", header: "Barangay", cell: ({ row }) => <span className="text-xs">{row.original.barangay?.name ?? "—"}</span> },
+      { id: "district", header: "District", cell: ({ row }) => <span className="text-xs">{row.original.barangay?.district?.name ?? "—"}</span> },
+      { accessorKey: "created_at", header: "Date", cell: ({ row }) => <div className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(row.original.created_at), { addSuffix: true })}</div> },
     ],
-    [isPending, mutate]
+    []
   );
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.25 }}
-    >
-      <div className="space-y-4">
-        <Input
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="h-10 max-w-xs rounded-lg"
-        />
-        <DataTable
-          columns={columns}
-          data={data ?? []}
-          isLoading={isLoading}
-        />
-      </div>
-    </motion.div>
+    <div className="space-y-4">
+      <DataTable columns={columns} data={(data ?? []) as UserRow[]} isLoading={isLoading} globalSearch />
+    </div>
   );
 }

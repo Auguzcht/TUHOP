@@ -49,7 +49,7 @@ function PaginationLink({
       asChild
       variant={isActive ? "outline" : "ghost"}
       size={size}
-      className={cn(className)}
+      className={cn("animate-in", className)}
     >
       <a
         aria-current={isActive ? "page" : undefined}
@@ -111,11 +111,49 @@ function PaginationEllipsis({
       )}
       {...props}
     >
-      <MoreHorizontalIcon
-      />
+      <MoreHorizontalIcon />
       <span className="sr-only">More pages</span>
     </span>
   )
+}
+
+/**
+ * Build a compact page number list with ellipsis for large page counts.
+ *   getPageNumbers(1, 41) → [1, 2, 3, 4, "...", 40, 41]
+ *   getPageNumbers(5, 41) → [1, 2, 3, 4, 5, 6, "...", 40, 41]
+ *   getPageNumbers(39, 41) → [1, 2, "...", 38, 39, 40, 41]
+ */
+function getPageNumbers(current: number, total: number): (number | "...")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const pages: (number | "...")[] = [];
+  const start = Math.max(1, current - 2);
+  const end = Math.min(total, current + 2);
+
+  // Always show first 1-2 pages
+  if (start > 3) {
+    pages.push(1, 2, "...");
+  } else if (start === 3) {
+    pages.push(1, 2);
+  } else if (start === 2) {
+    pages.push(1);
+  }
+
+  // Middle range
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  // Always show last 1-2 pages
+  if (end < total - 2) {
+    pages.push("...", total - 1, total);
+  } else if (end === total - 2) {
+    pages.push(total - 1, total);
+  } else if (end === total - 1) {
+    pages.push(total);
+  }
+
+  return pages;
 }
 
 export {
@@ -126,4 +164,5 @@ export {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  getPageNumbers,
 }

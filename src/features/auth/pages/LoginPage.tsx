@@ -50,11 +50,14 @@ export function LoginPage() {
     }
 
     setIsSubmitting(true);
+    const startTime = Date.now();
     const { error } = await signIn(email, password, rememberMe);
     if (error) {
       setFormError(error);
     }
-    setIsSubmitting(false);
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, 600 - elapsed);
+    setTimeout(() => setIsSubmitting(false), remaining);
   };
 
   const errorMessage = formError;
