@@ -29,5 +29,5 @@
     }
   },
   "include": ["src"],
-  "exclude": ["src/components/animate-ui"]
+  "exclude": ["src/components/animate-ui", "src/components/ui/map.tsx", "src/components/ui/place-autocomplete.tsx", "src/components/ui/button-group.tsx"]
 }

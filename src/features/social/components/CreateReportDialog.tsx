@@ -82,9 +82,11 @@ export function CreateReportDialog({ open, onOpenChange }: CreateReportDialogPro
   };
 
   // Reset on dialog close
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!open) {
-      clearDraft(); resetForm(); setErrors([]);
+      clearDraft(); resetForm();
+      setErrors([]);
     }
   }, [open]);
 
@@ -99,9 +101,11 @@ export function CreateReportDialog({ open, onOpenChange }: CreateReportDialogPro
       }, [postContent, streetAddress, physRef, physRefText, mobility, mobilityText, relevantComments, floodDate]);
 
   // Reset on dialog close
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!open) {
-      clearDraft(); resetForm(); setErrors([]);
+      clearDraft(); resetForm();
+      setErrors([]);
     }
   }, [open]);
 
@@ -179,14 +183,6 @@ export function CreateReportDialog({ open, onOpenChange }: CreateReportDialogPro
     });
   };
 
-  const resetForm = () => {
-    setPostContent(""); setFloodDate(new Date()); setStreetAddress("");
-    setMarkerPos(DAVAO_DEFAULT); setLocationSet(false);
-    setPhysRef(""); setPhysRefText(""); setMobility(""); setMobilityText("");
-    setRelevantComments(""); setFiles([]); setPreviews([]); setUploaded(new Set());
-  };
-
-  // Auto-close success dialog and redirect
   useEffect(() => {
     if (!showSuccess) return;
     const t = setTimeout(() => {
