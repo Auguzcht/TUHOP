@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAuthStore } from "@/stores/auth-store";
 import { StatCard } from "@/components/shared/StatCard";
 import {
@@ -38,6 +39,37 @@ import { useModelPerformance } from "@/features/dashboard/hooks/useModelPerforma
 import { useTopBarangays } from "@/features/dashboard/hooks/useTopBarangays";
 import { useRecentOverrides } from "@/features/dashboard/hooks/useRecentOverrides";
 
+
+/** Transforms trend rows → { date, low, moderate, high } and renders a stacked bar chart */
+function TrendChart({ data }: { data: { flood_date: string | null; report_count: number | null; severity: string | null }[] }) {
+  const grouped = useMemo(() => {
+    const map = new Map<string, { date: string; low: number; moderate: number; high: number }>();
+    for (const row of data) {
+      const date = row.flood_date ?? "";
+      if (!map.has(date)) map.set(date, { date, low: 0, moderate: 0, high: 0 });
+      const entry = map.get(date)!;
+      if (row.severity === "low") entry.low += row.report_count ?? 0;
+      else if (row.severity === "moderate") entry.moderate += row.report_count ?? 0;
+      else if (row.severity === "high") entry.high += row.report_count ?? 0;
+    }
+    return Array.from(map.values());
+  }, [data]);
+
+  return (
+    <div className="h-full w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={grouped} margin={{ top: 4, right: 0, bottom: 0, left: 0 }} barCategoryGap="12%">
+          <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} padding={{ left: 0, right: 0 }} />
+          <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} width={20} />
+          <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+          <Bar dataKey="low" stackId="a" fill="var(--severity-low)" radius={[0, 0, 0, 0]} />
+          <Bar dataKey="moderate" stackId="a" fill="var(--severity-moderate)" />
+          <Bar dataKey="high" stackId="a" fill="var(--severity-high)" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -253,27 +285,24 @@ export function DashboardPage() {
           </Card>
 
           {/* Trend chart */}
-          <Card size="sm">
+          <Card size="sm" className="flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                 <BarChart3 className="size-4 text-accent" />
                 Classification Trend
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-1 flex-col px-0 pb-4 md:pb-5">
               {trendData && trendData.length > 0 ? (
-                <div className="flex h-40 items-center justify-center">
-                  <TrendingUp className="size-6 text-accent/50" />
-                  <span className="ml-2 text-xs text-muted-foreground/50">
-                    {trendData.length} data points
-                  </span>
+                <div className="flex-1">
+                  <TrendChart data={trendData} />
                 </div>
               ) : (
-                <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-muted">
+                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-muted">
                   <div className="flex flex-col items-center gap-1 text-center">
                     <TrendingUp className="size-6 text-muted-foreground/50" />
                     <span className="text-xs text-muted-foreground/50">
-                      Trend chart loading...
+                      No trend data yet
                     </span>
                   </div>
                 </div>

@@ -25,6 +25,7 @@ export function useValidateReport() {
       queryClient.invalidateQueries({ queryKey: ["hitl", "report", variables.reportId] });
       queryClient.invalidateQueries({ queryKey: ["hitl", "daily-progress"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["map", "validated-data"] });
     },
   });
 }

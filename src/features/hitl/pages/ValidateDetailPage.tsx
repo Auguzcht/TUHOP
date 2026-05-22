@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -15,7 +15,6 @@ import { formatDistanceToNow } from "date-fns";
 import { PageTransition } from "@/components/shared/motion";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { RoleBadge } from "@/components/shared/RoleBadge";
-import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -351,11 +350,6 @@ export function ValidateDetailPage() {
   }, [report?.model_severity]);
 
   const topConf = parseTopConfidence(report?.model_confidence);
-  const eventStatus = useMemo(() => {
-    const s = report?.flood_event_status;
-    if (s === "ongoing" || s === "clearing" || s === "resolved") return s;
-    return null;
-  }, [report?.flood_event_status]);
 
   const isOverride = Boolean(
     report?.model_severity &&
@@ -478,17 +472,6 @@ export function ValidateDetailPage() {
                           })
                         : "—"}
                     </div>
-                    {report.author?.barangay ? (
-                      <div className="mt-1 text-muted-foreground/60">
-                        <div className="text-[10px]">Assigned to</div>
-                        <div className="font-medium">
-                          {report.author.barangay.name}
-                          {report.author.barangay.district?.name
-                            ? ` · ${report.author.barangay.district.name}`
-                            : ""}
-                        </div>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
 
@@ -507,10 +490,9 @@ export function ValidateDetailPage() {
                 <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <MapPin className="size-3.5" />
-                    {report.street_address ?? "No address"}
-                    {report.barangay?.name ? `, ${report.barangay.name}` : ""}
+                    {report.street_address ?? report.barangay?.name ?? "No address"}
                   </span>
-                  {eventStatus ? <StatusBadge status={eventStatus} /> : null}
+
                 </div>
               </CardContent>
             </Card>

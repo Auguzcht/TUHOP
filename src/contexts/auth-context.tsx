@@ -63,6 +63,14 @@ async function fetchProfile(userId: string) {
       return false;
     }
 
+    // Block deactivated/rejected users — sign them out immediately
+    if (data?.status && data.status !== "active" && data.status !== "pending_review") {
+      logAuth("blocked", { userId, status: data.status });
+      useAuthStore.getState().setProfile(null);
+      await supabase.auth.signOut();
+      return false;
+    }
+
     useAuthStore.getState().setProfile(data);
     logAuth("profile loaded", {
       userId,
@@ -260,11 +268,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email,
           password,
         });
+
         if (result.error) {
           useAuthStore.getState().setTransitioning(false);
+          return { error: result.error.message, data: null };
         }
+
+        // Immediately check if user is deactivated/rejected — sign out if so
+        if (result.data?.user) {
+          const { data: profile } = await supabase
+            .from("users_profile")
+            .select("status")
+            .eq("id", result.data.user.id)
+            .single();
+
+          if (profile?.status && profile.status !== "active" && profile.status !== "pending_review") {
+            await supabase.auth.signOut();
+            useAuthStore.getState().setTransitioning(false);
+            return { error: "Your account has been deactivated. Contact an administrator.", data: null };
+          }
+        }
+
         return {
-          error: result.error?.message ?? null,
+          error: null,
           data: result.data?.session ?? null,
         };
       } catch (err) {
